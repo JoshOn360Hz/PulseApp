@@ -193,7 +193,7 @@ struct PermissionsPage: View {
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct FeatureRow: View {
     let icon: String

@@ -106,7 +106,7 @@ class BluetoothTest: BaseDiagnosticTest {
     }
 }
 
-// MARK: - Bluetooth Device Model
+// Bluetooth Device Model
 struct BluetoothDevice: Identifiable {
     let id: UUID
     let name: String?
@@ -117,7 +117,7 @@ struct BluetoothDevice: Identifiable {
     }
 }
 
-// MARK: - Bluetooth Delegate
+// Bluetooth Delegate
 class BluetoothDelegate: NSObject, CBCentralManagerDelegate {
     weak var test: BluetoothTest?
     

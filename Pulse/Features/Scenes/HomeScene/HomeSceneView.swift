@@ -60,7 +60,7 @@ struct HomeSceneView: View {
     }
 }
 
-// MARK: - Tests Tab View
+// Tests Tab View
 struct TestsTabView: View {
     @ObservedObject var engine: DiagnosticEngine
     @State private var selectedCategory: TestCategory = .inputInteraction
@@ -221,7 +221,7 @@ struct TestsTabView: View {
     }
 }
 
-// MARK: - Results Tab View
+// Results Tab View
 struct ResultsTabView: View {
     @ObservedObject var engine: DiagnosticEngine
     @State private var showingShareSheet = false
@@ -575,7 +575,7 @@ struct ResultsTabView: View {
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct CompactStatCard: View {
     let title: String
@@ -849,7 +849,7 @@ struct CategoryResultsCard: View {
     }
 }
 
-// MARK: - Activity View Controller
+// Activity View Controller
 struct ActivityViewController: UIViewControllerRepresentable {
     let activityItems: [Any]
     

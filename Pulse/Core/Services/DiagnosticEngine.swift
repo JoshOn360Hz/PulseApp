@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-// MARK: - Diagnostic Engine
+// Diagnostic Engine
 @MainActor
 class DiagnosticEngine: ObservableObject {
     static let shared = DiagnosticEngine()
@@ -22,11 +22,7 @@ class DiagnosticEngine: ObservableObject {
     
     private func loadTests() {
         tests = [
-            // Input & Interaction tests will be added
-            // Camera & Media tests will be added
-            // Sensor tests will be added
-            // Biometric tests will be added
-            // System tests will be added
+            // dynamically load 
         ]
     }
     

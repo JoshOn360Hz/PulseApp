@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-// MARK: - Test Status
+// Test Status
 enum TestStatus: String, Codable {
     case notStarted = "Not Started"
     case running = "Running"
@@ -10,7 +10,7 @@ enum TestStatus: String, Codable {
     case skipped = "SKIPPED"
 }
 
-// MARK: - Test Category
+// Test Category
 enum TestCategory: String, Codable, CaseIterable {
     case inputInteraction = "Input & Interaction"
     case display = "Display"
@@ -20,7 +20,7 @@ enum TestCategory: String, Codable, CaseIterable {
     case systemConnectivity = "System & Connectivity"
 }
 
-// MARK: - Test Result
+// Test Result
 struct TestResult: Codable, Identifiable {
     let id: UUID
     let testId: String
@@ -39,7 +39,7 @@ struct TestResult: Codable, Identifiable {
     }
 }
 
-// MARK: - Diagnostic Test Protocol
+// Diagnostic Test Protocol
 protocol DiagnosticTest: AnyObject, Identifiable {
     var id: String { get }
     var title: String { get }
@@ -56,7 +56,7 @@ protocol DiagnosticTest: AnyObject, Identifiable {
     func markSkipped(reason: String)
 }
 
-// MARK: - Base Diagnostic Test
+// Base Diagnostic Test
 class BaseDiagnosticTest: DiagnosticTest, ObservableObject {
     let id: String
     let title: String

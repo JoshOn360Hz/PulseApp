@@ -2,7 +2,7 @@ import AVFoundation
 import SwiftUI
 import Combine
 
-// MARK: - Microphone Test
+// Microphone Test
 class MicrophoneTest: BaseDiagnosticTest {
     @Published var isRecording = false
     @Published var audioLevel: Float = 0.0

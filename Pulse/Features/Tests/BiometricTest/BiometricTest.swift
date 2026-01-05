@@ -2,7 +2,7 @@ import LocalAuthentication
 import SwiftUI
 import Combine
 
-// MARK: - Biometric Test
+// Biometric Test
 class BiometricTest: BaseDiagnosticTest {
     @Published var biometricType: LABiometryType = .none
     @Published var isAvailable = false

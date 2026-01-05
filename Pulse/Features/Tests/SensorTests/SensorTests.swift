@@ -2,7 +2,7 @@ import CoreMotion
 import SwiftUI
 import Combine
 
-// MARK: - Accelerometer Test
+// Accelerometer Test
 class AccelerometerTest: BaseDiagnosticTest {
     @Published var x: Double = 0
     @Published var y: Double = 0

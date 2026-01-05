@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-// MARK: - Touchscreen Test
+// Touchscreen Test
 class TouchscreenTest: BaseDiagnosticTest {
     @Published var touchPoints: [CGPoint] = []
     private var requiredTouches = 9 // 3x3 grid

@@ -3,7 +3,7 @@ import Network
 import SwiftUI
 import Combine
 
-// MARK: - Battery Test
+// Battery Test
 class BatteryTest: BaseDiagnosticTest {
     @Published var level: Float = 0
     @Published var state: UIDevice.BatteryState = .unknown
@@ -81,7 +81,7 @@ class BatteryTest: BaseDiagnosticTest {
     }
 }
 
-// MARK: - Network Test
+// Network Test
 class NetworkTest: BaseDiagnosticTest {
     @Published var isConnected = false
     @Published var connectionType: NWInterface.InterfaceType?
@@ -137,7 +137,7 @@ class NetworkTest: BaseDiagnosticTest {
     }
 }
 
-// MARK: - Thermal State Test
+// Thermal State Test
 class ThermalStateTest: BaseDiagnosticTest {
     @Published var thermalState: ProcessInfo.ThermalState = .nominal
     

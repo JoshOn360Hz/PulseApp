@@ -2,7 +2,6 @@ import AVFoundation
 import SwiftUI
 import Combine
 
-// MARK: - Speaker Test
 class SpeakerTest: BaseDiagnosticTest {
     @Published var isPlaying = false
     

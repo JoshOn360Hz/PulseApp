@@ -3,7 +3,7 @@ import UIKit
 
 class ReportExporter {
     
-    // MARK: - PDF Export
+    // PDF Export
     static func generatePDF(from report: DiagnosticReport) -> Data? {
         let pdfMetaData = [
             kCGPDFContextCreator: "Pulse Diagnostics",
@@ -135,7 +135,7 @@ class ReportExporter {
         return data
     }
     
-    // MARK: - JSON Export
+    // JSON Export
     static func generateJSON(from report: DiagnosticReport) -> Data? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

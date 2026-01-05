@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-// MARK: - Multi-Touch Test
+// Multi-Touch Test
 class MultiTouchTest: BaseDiagnosticTest {
     @Published var activeTouches: [UUID: CGPoint] = [:]
     @Published var maxSimultaneousTouches = 0

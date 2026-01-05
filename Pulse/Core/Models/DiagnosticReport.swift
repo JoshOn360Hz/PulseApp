@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-// MARK: - Diagnostic Report
+// Diagnostic Report
 struct DiagnosticReport: Codable {
     let id: UUID
     let timestamp: Date
@@ -28,7 +28,7 @@ struct DiagnosticReport: Codable {
     }
 }
 
-// MARK: - Device Info
+// Device Info
 struct DeviceInfo: Codable {
     let model: String
     let systemName: String
