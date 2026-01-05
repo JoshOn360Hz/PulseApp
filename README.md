@@ -6,7 +6,7 @@
 
 Pulse provides an extensive suite of diagnostic tests to ensure your device is functioning optimally:
 
-### 🔧 Hardware Tests
+### Hardware Tests
 - **Camera Test** - Verify front and rear camera functionality
 - **Speaker Test** - Test audio output quality
 - **Microphone Test** - Validate audio input and recording
