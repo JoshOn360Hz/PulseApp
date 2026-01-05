@@ -57,14 +57,27 @@ class ReportExporter {
             
             let deviceLines = [
                 "Model: \(report.deviceInfo.model)",
+                "Identifier: \(report.deviceInfo.modelIdentifier)",
                 "System: \(report.deviceInfo.systemName) \(report.deviceInfo.systemVersion)",
                 "Device Name: \(report.deviceInfo.deviceName)",
-                "Battery: \(Int(report.deviceInfo.batteryLevel * 100))% (\(report.deviceInfo.batteryState))"
+                "Battery: \(Int(report.deviceInfo.batteryLevel * 100))% (\(report.deviceInfo.batteryState))",
+                "",
+                "Screen: \(report.deviceInfo.screenResolution) @ \(report.deviceInfo.screenScale)",
+                "Storage: \(report.deviceInfo.availableStorage) / \(report.deviceInfo.totalStorage)",
+                "Memory: \(report.deviceInfo.totalMemory)",
+                "CPU Cores: \(report.deviceInfo.processorCount)",
+                "Low Power Mode: \(report.deviceInfo.isLowPowerModeEnabled ? "Enabled" : "Disabled")",
+                "Locale: \(report.deviceInfo.locale)",
+                "Timezone: \(report.deviceInfo.timezone)"
             ]
             
             for line in deviceLines {
-                line.draw(at: CGPoint(x: 70, y: yPosition), withAttributes: textAttributes)
-                yPosition += 20
+                if line.isEmpty {
+                    yPosition += 10
+                } else {
+                    line.draw(at: CGPoint(x: 70, y: yPosition), withAttributes: textAttributes)
+                    yPosition += 20
+                }
             }
             yPosition += 20
             

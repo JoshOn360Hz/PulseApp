@@ -1,279 +1,413 @@
 import SwiftUI
 
-struct ReportSceneView: View {
+// Results Tab View (Used in HomeSceneView TabView)
+struct ResultsTabView: View {
     @ObservedObject var engine: DiagnosticEngine
     @State private var showingShareSheet = false
     @State private var shareItems: [Any] = []
-    @State private var report: DiagnosticReport?
+    @State private var isGeneratingReport = false
+    
+    private var report: DiagnosticReport {
+        engine.generateReport()
+    }
+    
+    private var passRate: Double {
+        let total = Double(report.results.count)
+        guard total > 0 else { return 0 }
+        return Double(report.passedTests.count) / total * 100
+    }
     
     var body: some View {
-        ScrollView {
-            if let report = report {
-                VStack(spacing: 25) {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
                     // Header
-                    VStack(spacing: 10) {
-                        Image(systemName: "doc.text.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
-                        
-                        Text("Diagnostic Report")
-                            .font(.title)
-                            .bold()
-                        
-                        Text(formattedDate(report.timestamp))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                    VStack(spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Results")
+                                    .font(.system(size: 34, weight: .bold))
+                                Text(formattedDate(report.timestamp))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
                     }
-                    .padding(.top, 20)
                     
-                    // Device Info Card
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Device Information")
-                            .font(.headline)
-                        
-                        Divider()
-                        
-                        InfoRow(label: "Model", value: report.deviceInfo.model)
-                        InfoRow(label: "System", value: "\(report.deviceInfo.systemName) \(report.deviceInfo.systemVersion)")
-                        InfoRow(label: "Device Name", value: report.deviceInfo.deviceName)
-                        InfoRow(label: "Battery", value: "\(Int(report.deviceInfo.batteryLevel * 100))% (\(report.deviceInfo.batteryState))")
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(15)
-                    .padding(.horizontal)
-                    
-                    // Summary Card
-                    VStack(spacing: 15) {
-                        Text("Test Summary")
-                            .font(.headline)
-                        
-                        Divider()
-                        
-                        HStack(spacing: 20) {
-                            SummaryItem(
-                                label: "Total",
-                                count: report.results.count,
-                                color: .blue
-                            )
+                    // Pass rate circle
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .stroke(Color(.systemGray5), lineWidth: 12)
+                                .frame(width: 140, height: 140)
                             
-                            SummaryItem(
+                            Circle()
+                                .trim(from: 0, to: passRate / 100)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: passRate >= 80 ? [.green, .green.opacity(0.7)] :
+                                                passRate >= 50 ? [.orange, .orange.opacity(0.7)] :
+                                                [.red, .red.opacity(0.7)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                                )
+                                .frame(width: 140, height: 140)
+                                .rotationEffect(.degrees(-90))
+                            
+                            VStack(spacing: 4) {
+                                Text("\(Int(passRate))%")
+                                    .font(.system(size: 36, weight: .bold))
+                                Text("Pass Rate")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.top, 10)
+                        
+                        // Summary stats
+                        HStack(spacing: 20) {
+                            ResultStat(
                                 label: "Passed",
                                 count: report.passedTests.count,
                                 color: .green
                             )
                             
-                            SummaryItem(
+                            Divider()
+                                .frame(height: 30)
+                            
+                            ResultStat(
                                 label: "Failed",
                                 count: report.failedTests.count,
                                 color: .red
                             )
                             
-                            SummaryItem(
+                            Divider()
+                                .frame(height: 30)
+                            
+                            ResultStat(
                                 label: "Skipped",
                                 count: report.skippedTests.count,
                                 color: .orange
                             )
                         }
+                        .padding(.horizontal, 30)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(15)
-                    .padding(.horizontal)
+                    .padding(.vertical, 20)
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    .padding(.horizontal, 20)
                     
-                    // Results List
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Test Results")
-                            .font(.headline)
-                            .padding(.horizontal)
+                    // Device info card
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: "iphone")
+                                .font(.title3)
+                                .foregroundColor(.blue)
+                            Text("Device Information")
+                                .font(.headline)
+                        }
                         
-                        ForEach(report.results) { result in
-                            ResultRow(result: result)
-                                .padding(.horizontal)
+                        // Basic Info Section
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Basic Information")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                                .padding(.bottom, 4)
+                            
+                            VStack(spacing: 12) {
+                                DeviceInfoRow(
+                                    icon: "iphone",
+                                    label: "Model",
+                                    value: report.deviceInfo.model
+                                )
+                                DeviceInfoRow(
+                                    icon: "number",
+                                    label: "Identifier",
+                                    value: report.deviceInfo.modelIdentifier
+                                )
+                                DeviceInfoRow(
+                                    icon: "gear",
+                                    label: "System",
+                                    value: "\(report.deviceInfo.systemName) \(report.deviceInfo.systemVersion)"
+                                )
+                                DeviceInfoRow(
+                                    icon: "battery.75",
+                                    label: "Battery",
+                                    value: "\(Int(report.deviceInfo.batteryLevel * 100))%"
+                                )
+                            }
+                        }
+                        
+                        Divider()
+                            .padding(.vertical, 4)
+                        
+                        // Hardware Specs Section
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Hardware")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                                .padding(.bottom, 4)
+                            
+                            VStack(spacing: 12) {
+                                DeviceInfoRow(
+                                    icon: "display",
+                                    label: "Screen",
+                                    value: "\(report.deviceInfo.screenResolution) @ \(report.deviceInfo.screenScale)"
+                                )
+                                DeviceInfoRow(
+                                    icon: "internaldrive",
+                                    label: "Storage",
+                                    value: "\(report.deviceInfo.availableStorage) / \(report.deviceInfo.totalStorage)"
+                                )
+                                DeviceInfoRow(
+                                    icon: "memorychip",
+                                    label: "Memory",
+                                    value: report.deviceInfo.totalMemory
+                                )
+                                DeviceInfoRow(
+                                    icon: "cpu",
+                                    label: "CPU Cores",
+                                    value: "\(report.deviceInfo.processorCount)"
+                                )
+                                DeviceInfoRow(
+                                    icon: "bolt.badge.a",
+                                    label: "Low Power",
+                                    value: report.deviceInfo.isLowPowerModeEnabled ? "Enabled" : "Disabled"
+                                )
+                            }
                         }
                     }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    .padding(.horizontal, 20)
                     
-                    // Export Buttons
-                    VStack(spacing: 15) {
+                    // Test results by category
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: "list.bullet.clipboard")
+                                .font(.title3)
+                                .foregroundColor(.blue)
+                            Text("Test Results")
+                                .font(.headline)
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        ForEach(TestCategory.allCases, id: \.self) { category in
+                            let categoryResults = report.results.filter { result in
+                                engine.tests.first(where: { $0.id == result.testId })?.category == category
+                            }
+                            
+                            if !categoryResults.isEmpty {
+                                CategoryResultsCard(
+                                    category: category,
+                                    results: categoryResults,
+                                    engine: engine
+                                )
+                            }
+                        }
+                    }
+                    .padding(.vertical, 10)
+                    
+                    // Export buttons
+                    VStack(spacing: 12) {
                         Button(action: exportPDF) {
                             HStack {
                                 Image(systemName: "doc.fill")
+                                    .font(.system(size: 16, weight: .semibold))
                                 Text("Export as PDF")
+                                    .font(.system(size: 16, weight: .semibold))
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
                             .foregroundColor(.white)
-                            .cornerRadius(15)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(16)
                         }
                         
                         Button(action: exportJSON) {
                             HStack {
-                                Image(systemName: "curlybraces")
+                                Image(systemName: "doc.text.fill")
+                                    .font(.system(size: 16, weight: .semibold))
                                 Text("Export as JSON")
+                                    .font(.system(size: 16, weight: .semibold))
                             }
+                            .foregroundColor(.blue)
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(15)
+                            .padding(.vertical, 16)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(16)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
                     .padding(.bottom, 30)
                 }
-            } else {
-                ProgressView("Generating report...")
-                    .padding()
             }
-        }
-        .navigationTitle("Report")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems)
-        }
-        .onAppear {
-            if report == nil {
-                report = engine.generateReport()
+            .background(Color(.systemGroupedBackground))
+            .navigationBarHidden(true)
+            .sheet(isPresented: $showingShareSheet) {
+                ActivityViewController(activityItems: shareItems)
+            }
+            .onChange(of: showingShareSheet) {
+                // Clean up when sheet is dismissed
+                if !showingShareSheet {
+                    shareItems = []
+                }
+            }
+            .overlay {
+                if isGeneratingReport {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                                .tint(.primary)
+                            
+                            Text("Generating Report...")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(40)
+                        .background(Material.regular)
+                        .cornerRadius(20)
+                        .shadow(radius: 20)
+                    }
+                }
             }
         }
     }
     
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .long
+        formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
     
     private func exportPDF() {
-        guard let report = report else { return }
-        if let pdfData = ReportExporter.generatePDF(from: report) {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("PulseDiagnosticReport.pdf")
-            try? pdfData.write(to: tempURL)
-            shareItems = [tempURL]
-            showingShareSheet = true
+        isGeneratingReport = true
+        
+        Task {
+            let minimumDisplayTime = 0.8
+            let currentReport = report
+            
+            // Run generation and minimum wait in parallel
+            async let generationTask: (Data, URL)? = Task {
+                guard let pdfData = await ReportExporter.generatePDF(from: currentReport) else { 
+                    return nil
+                }
+                
+                let tempDir = FileManager.default.temporaryDirectory
+                let fileName = "Pulse_Report_\(Date().timeIntervalSince1970).pdf"
+                let fileURL = tempDir.appendingPathComponent(fileName)
+                
+                do {
+                    try pdfData.write(to: fileURL)
+                    return (pdfData, fileURL)
+                } catch {
+                    print("Error saving PDF: \(error)")
+                    return nil
+                }
+            }.value
+            
+            async let minimumWait: Void = {
+                try? await Task.sleep(nanoseconds: UInt64(minimumDisplayTime * 1_000_000_000))
+            }()
+            
+            // Wait for both to complete
+            _ = await minimumWait
+            let result = await generationTask
+            
+            await MainActor.run {
+                isGeneratingReport = false
+                
+                if let (_, fileURL) = result {
+                    // Clear previous items first
+                    shareItems = []
+                    // Small delay to ensure state is clean
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        shareItems = [fileURL]
+                        showingShareSheet = true
+                    }
+                } else {
+                    print("Failed to generate PDF")
+                }
+            }
         }
     }
     
     private func exportJSON() {
-        guard let report = report else { return }
-        if let jsonData = ReportExporter.generateJSON(from: report) {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("PulseDiagnosticReport.json")
-            try? jsonData.write(to: tempURL)
-            shareItems = [tempURL]
-            showingShareSheet = true
-        }
-    }
-}
-
-struct InfoRow: View {
-    let label: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(label)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .bold()
-        }
-        .font(.subheadline)
-    }
-}
-
-struct SummaryItem: View {
-    let label: String
-    let count: Int
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 5) {
-            Text("\(count)")
-                .font(.title2)
-                .bold()
-                .foregroundColor(color)
+        isGeneratingReport = true
+        
+        Task {
+            let minimumDisplayTime = 0.8
+            let currentReport = report
             
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-struct ResultRow: View {
-    let result: TestResult
-    
-    var statusColor: Color {
-        switch result.status {
-        case .passed: return .green
-        case .failed: return .red
-        case .skipped: return .orange
-        default: return .gray
-        }
-    }
-    
-    var statusIcon: String {
-        switch result.status {
-        case .passed: return "checkmark.circle.fill"
-        case .failed: return "xmark.circle.fill"
-        case .skipped: return "minus.circle.fill"
-        default: return "circle"
-        }
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: statusIcon)
-                    .foregroundColor(statusColor)
+            // Run generation and minimum wait in parallel
+            async let generationTask: (Data, URL)? = Task {
+                guard let jsonData = await ReportExporter.generateJSON(from: currentReport) else { 
+                    return nil
+                }
                 
-                Text(result.testId.replacingOccurrences(of: "_", with: " ").capitalized)
-                    .font(.headline)
+                let tempDir = FileManager.default.temporaryDirectory
+                let fileName = "Pulse_Report_\(Date().timeIntervalSince1970).json"
+                let fileURL = tempDir.appendingPathComponent(fileName)
                 
-                Spacer()
-                
-                Text(result.status.rawValue)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(statusColor.opacity(0.2))
-                    .foregroundColor(statusColor)
-                    .cornerRadius(8)
-            }
+                do {
+                    try jsonData.write(to: fileURL)
+                    return (jsonData, fileURL)
+                } catch {
+                    print("Error saving JSON: \(error)")
+                    return nil
+                }
+            }.value
             
-            if let reason = result.failureReason {
-                Text(reason)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .italic()
+            async let minimumWait: Void = {
+                try? await Task.sleep(nanoseconds: UInt64(minimumDisplayTime * 1_000_000_000))
+            }()
+            
+            // Wait for both to complete
+            _ = await minimumWait
+            let result = await generationTask
+            
+            await MainActor.run {
+                isGeneratingReport = false
+                
+                if let (_, fileURL) = result {
+                    // Clear previous items first
+                    shareItems = []
+                    // Small delay to ensure state is clean
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        shareItems = [fileURL]
+                        showingShareSheet = true
+                    }
+                } else {
+                    print("Failed to generate JSON")
+                }
             }
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
     }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: items,
-            applicationActivities: nil
-        )
-        
-        // Exclude certain activity types if needed
-        controller.excludedActivityTypes = [
-            .assignToContact,
-            .addToReadingList
-        ]
-        
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
+// Supporting Views
+// (Moved to ReportComponents.swift)
+

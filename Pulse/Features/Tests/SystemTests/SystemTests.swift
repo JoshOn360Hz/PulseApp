@@ -64,7 +64,7 @@ class BatteryTest: BaseDiagnosticTest {
     
     func confirmSuccess() {
         markPassed(metadata: [
-            "level": "\(Int(level * 100))%",
+            "level": String(format: "%.0f%%", level * 100),
             "state": batteryStateString(state)
         ])
     }

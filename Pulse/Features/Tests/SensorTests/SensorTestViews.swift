@@ -396,6 +396,8 @@ struct RotationCard: View {
 struct MagnetometerTestView: View {
     @ObservedObject var test: MagnetometerTest
     @Environment(\.dismiss) var dismiss
+    @State private var previousHeading: Double = 0
+    @State private var rotationOffset: Double = 0
     
     var body: some View {
         ZStack {
@@ -546,8 +548,8 @@ struct MagnetometerTestView: View {
                                             }
                                             .fill(Color.gray.opacity(0.6))
                                         }
-                                        .rotationEffect(.degrees(test.heading > 0 ? -(360 - test.heading) : 0), anchor: UnitPoint(x: 0.5, y: 0.5))
-                                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: test.heading)
+                                        .rotationEffect(.degrees(-rotationOffset), anchor: UnitPoint(x: 0.5, y: 0.5))
+                                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: rotationOffset)
                                     }
                                     .frame(width: 200, height: 200)
                                     
@@ -653,9 +655,26 @@ struct MagnetometerTestView: View {
         .onAppear {
             test.reset()
             Task { try? await test.run() }
+            previousHeading = test.heading
+            rotationOffset = test.heading
         }
         .onDisappear {
             test.stopMonitoring()
+        }
+        .onChange(of: test.heading) { oldValue, newValue in
+            // Calculate the shortest angular distance
+            var delta = newValue - previousHeading
+            
+            // Normalize delta to [-180, 180]
+            if delta > 180 {
+                delta -= 360
+            } else if delta < -180 {
+                delta += 360
+            }
+            
+            // Update continuous rotation offset (negated for correct rotation direction)
+            rotationOffset -= delta
+            previousHeading = newValue
         }
         .onChange(of: test.status) {
             if test.status == .passed || test.status == .failed || test.status == .skipped {

@@ -127,7 +127,7 @@ struct BatteryTestView: View {
                                         Circle()
                                             .fill(batteryColor)
                                             .frame(width: 8, height: 8)
-                                        Text("\(Int(test.level * 100))%")
+                                        Text(String(format: "%.0f%%", test.level * 100))
                                             .fontWeight(.semibold)
                                             .foregroundColor(batteryColor)
                                     }

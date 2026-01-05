@@ -59,6 +59,9 @@ class DiagnosticEngine: ObservableObject {
     func runAllTests() async {
         isRunning = true
         
+        // Reset all tests to start from scratch
+        resetAllTests()
+        
         for test in tests where test.isSupported {
             await runTest(test)
         }
