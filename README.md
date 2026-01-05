@@ -50,7 +50,7 @@ Pulse/
 - **DiagnosticTest** - Protocol defining test behavior
 - **DiagnosticReport** - Model representing test results
 
-## 🛠️ Requirements
+## Requirements
 
 - iOS 16.0+
 - Xcode 14.0+
