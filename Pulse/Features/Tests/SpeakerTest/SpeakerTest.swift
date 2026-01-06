@@ -60,7 +60,9 @@ class SpeakerTest: BaseDiagnosticTest {
         
         try engine.start()
         player.play()
-        player.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
+        
+        // Schedule buffer to play with completion callback
+        player.scheduleBuffer(buffer, at: nil, options: .interruptsAtLoop, completionCallbackType: .dataPlayedBack) { _ in }
         
         isPlaying = true
         try await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))

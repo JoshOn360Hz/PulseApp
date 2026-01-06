@@ -124,8 +124,8 @@ struct MultiTouchTestView: View {
                 try? await test.run()
             }
         }
-        .onChange(of: test.status) { newStatus in
-            if newStatus == .passed || newStatus == .failed || newStatus == .skipped {
+        .onChange(of: test.status) {
+            if test.status == .passed || test.status == .failed || test.status == .skipped {
                 dismiss()
             }
         }

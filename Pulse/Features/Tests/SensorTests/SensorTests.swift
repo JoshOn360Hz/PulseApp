@@ -276,9 +276,10 @@ class AmbientLightTest: BaseDiagnosticTest {
             forName: UIScreen.brightnessDidChangeNotification,
             object: nil,
             queue: .main
-        ) { [weak self] notification in
+        ) { [weak self] _ in
+            guard let self = self else { return }
             Task { @MainActor in
-                self?.updateBrightness()
+                self.updateBrightness()
             }
         }
         

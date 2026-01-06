@@ -742,14 +742,11 @@ struct AutoRunTestsView: View {
                 }
             }
         }
-        .background(
-            NavigationLink(
-                destination: currentTest.map { TestDetailView(test: $0, isAutoRunning: true, isPaused: $isPaused) },
-                isActive: $isNavigatingToTest,
-                label: { EmptyView() }
-            )
-            .hidden()
-        )
+        .navigationDestination(isPresented: $isNavigatingToTest) {
+            if let test = currentTest {
+                TestDetailView(test: test, isAutoRunning: true, isPaused: $isPaused)
+            }
+        }
         .onAppear {
             startNextTest()
         }
