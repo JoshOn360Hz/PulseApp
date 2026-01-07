@@ -64,20 +64,24 @@ struct HomeSceneView: View {
 struct TestsTabView: View {
     @ObservedObject var engine: DiagnosticEngine
     @State private var selectedCategory: TestCategory = .inputInteraction
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
-    var body: some View {
-        NavigationView {
-            ZStack {
-                // Gradient background
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.1),
-                        Color.cyan.opacity(0.05)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+    var isIPad: Bool {
+        horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom == .pad
+    }
+    
+    var contentView: some View {
+        ZStack {
+            // Gradient background
+            LinearGradient(
+                colors: [
+                    Color.blue.opacity(0.1),
+                    Color.cyan.opacity(0.05)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     // Header with gradient
@@ -113,26 +117,28 @@ struct TestsTabView: View {
                             .shadow(color: Color.orange.opacity(0.3), radius: 8, x: 0, y: 4)
                         }
                         
-                        // Run all button
-                        NavigationLink(destination: AutoRunTestsView(engine: engine)) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 13, weight: .semibold))
-                                Text("Run All")
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.blue.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                        // Run all button (hidden on iPad)
+                        if !isIPad {
+                            NavigationLink(destination: AutoRunTestsView(engine: engine)) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "play.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                    Text("Run All")
+                                        .font(.system(size: 15, weight: .semibold))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.blue, Color.blue.opacity(0.8)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .cornerRadius(20)
-                            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                .cornerRadius(20)
+                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -216,6 +222,19 @@ struct TestsTabView: View {
                 }
             }
             .navigationBarHidden(true)
+        }
+    }
+    
+    var body: some View {
+        Group {
+            if isIPad {
+                NavigationStack {
+                    contentView
+                }
+            } else {
+                NavigationView {
+                    contentView
+                }
             }
         }
     }
