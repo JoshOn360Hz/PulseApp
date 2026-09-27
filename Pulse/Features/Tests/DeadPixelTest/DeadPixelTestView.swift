@@ -2,260 +2,206 @@ import SwiftUI
 
 struct DeadPixelTestView: View {
     @ObservedObject var test: DeadPixelTest
-    @Environment(\.dismiss) var dismiss
-    @State private var showInstructions = true
-    
+    @Environment(\.dismiss) private var dismiss
+    @State private var showControls = true
+
+    private var textColor: Color {
+        test.currentColor == .white ? .black : .white
+    }
+
     var body: some View {
         ZStack {
-            // Full screen color
             test.currentColor.color
                 .ignoresSafeArea()
-            
-            // Instructions overlay
-            if showInstructions && !test.hasCompletedAllColors {
-                VStack {
+
+            if showControls {
+                LinearGradient(
+                    colors: [Color.black.opacity(0.65), .clear, Color.black.opacity(0.92)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    header
                     Spacer()
-                    
-                    instructionsCard
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    controls
                 }
+                .transition(.opacity)
             }
-            
-            // Confirmation dialog when all colors viewed
+
             if test.hasCompletedAllColors {
-                confirmationDialog
-            }
-            
-            // Top controls
-            VStack(spacing: 0) {
-                HStack {
-                    // Color indicator
-                    HStack(spacing: 10) {
-                        Circle()
-                            .fill(test.currentColor.color)
-                            .frame(width: 16, height: 16)
-                            .overlay(
-                                Circle()
-                                    .stroke(test.currentColor == .white || test.currentColor == .black ? Color.gray : Color.clear, lineWidth: 1)
-                            )
-                        
-                        Text(test.currentColor.name)
-                            .font(.body)
-                            .fontWeight(.medium)
-                        
-                        Text("(\(test.currentColorIndex + 1)/\(test.totalColors))")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Material.ultraThin))
-                    
-                    Spacer()
-                    
-                    // Toggle instructions
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3)) {
-                            showInstructions.toggle()
-                        }
-                    }) {
-                        Image(systemName: showInstructions ? "eye.slash.fill" : "eye.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.primary)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Material.ultraThin))
-                    }
-                    
-                    // Skip button
-                    Button(action: {
-                        test.markSkipped(reason: "User skipped test")
-                    }) {
-                        Text("Skip")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .background(Capsule().fill(Material.ultraThin))
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                
-                Spacer()
+                completionCard
             }
         }
-        .navigationBarHidden(true)
-        .statusBar(hidden: true)
+        .toolbar(.hidden, for: .navigationBar)
+        .preferredColorScheme(.dark)
         .onAppear {
             test.reset()
             Task { try? await test.run() }
         }
-        .onChange(of: test.status) {
-            if test.status == .passed || test.status == .failed || test.status == .skipped {
+        .onChange(of: test.status) { _, status in
+            if status == .passed || status == .failed || status == .skipped {
                 dismiss()
             }
         }
         .gesture(
             DragGesture(minimumDistance: 50)
                 .onEnded { value in
-                    if !test.hasCompletedAllColors {
-                        if value.translation.width < 0 {
-                            // Swipe left - next color
-                            test.nextColor()
-                        } else if value.translation.width > 0 && test.currentColorIndex > 0 {
-                            // Swipe right - previous color
-                            test.previousColor()
-                        }
+                    guard !test.hasCompletedAllColors else { return }
+                    if value.translation.width < 0 {
+                        test.nextColor()
+                    } else if value.translation.width > 0 {
+                        test.previousColor()
                     }
                 }
         )
     }
-    
-    var instructionsCard: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 20) {
-                NavigationButton(
-                    icon: "chevron.left",
-                    text: "Back",
-                    isDisabled: test.currentColorIndex == 0
-                ) {
-                    test.previousColor()
+
+    private var header: some View {
+        HStack(spacing: PulseSpacing.sm) {
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(textColor)
+                    .frame(width: 42, height: 42)
+                    .background(Color.black.opacity(0.28))
+                    .clipShape(Circle())
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Display inspection")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(textColor)
+            }
+
+            Spacer()
+
+            Button(action: {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    showControls.toggle()
                 }
-                
-                NavigationButton(
-                    icon: "chevron.right",
-                    text: "Next",
-                    isDisabled: false
-                ) {
-                    test.nextColor()
+            }) {
+                Image(systemName: showControls ? "eye.slash" : "eye")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(textColor)
+                    .frame(width: 42, height: 42)
+                    .background(Color.black.opacity(0.28))
+                    .clipShape(Circle())
+            }
+
+            Button(action: { test.markSkipped(reason: "User skipped test") }) {
+                Text("Skip")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(textColor)
+                    .padding(.horizontal, PulseSpacing.sm)
+                    .padding(.vertical, PulseSpacing.xs)
+                    .background(Color.black.opacity(0.28))
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(.horizontal, PulseSpacing.lg)
+        .padding(.top, PulseSpacing.sm)
+    }
+
+    private var controls: some View {
+        PulseTestPanel {
+            VStack(alignment: .leading, spacing: PulseSpacing.lg) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Check for dead pixels")
+                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .foregroundStyle(PulseTheme.textPrimary)
+
+                        Text("Look closely at each solid color, especially around the edges.")
+                            .font(.subheadline)
+                            .foregroundStyle(PulseTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Text("\(test.currentColorIndex + 1)/\(test.totalColors)")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(PulseTheme.accent)
+                }
+
+                HStack(spacing: PulseSpacing.xs) {
+                    ForEach(Array(PixelTestColor.allCases.enumerated()), id: \.offset) { index, color in
+                        Capsule()
+                            .fill(index <= test.currentColorIndex ? PulseTheme.accent : PulseTheme.surfaceRaised)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 6)
+                    }
+                }
+
+                HStack(spacing: PulseSpacing.sm) {
+                    Button {
+                        test.previousColor()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .bold))
+                            .frame(width: 48, height: 48)
+                    }
+                    .buttonStyle(PulseSecondaryButtonStyle())
+                    .disabled(test.currentColorIndex == 0)
+
+                    Button {
+                        test.nextColor()
+                    } label: {
+                        PulseButtonLabel(
+                            title: test.currentColorIndex == test.totalColors - 1 ? "Finish color scan" : "Next color",
+                            icon: "chevron.right"
+                        )
+                    }
+                    .buttonStyle(PulsePrimaryButtonStyle())
                 }
             }
-            
-            Text("Swipe left/right to change colors")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Material.regular)
-        )
     }
-    
-    var confirmationDialog: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 12) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.green)
-                
-                Text("Test Complete")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                Text("Did you notice any dead or stuck pixels?")
+
+    private var completionCard: some View {
+        VStack(spacing: PulseSpacing.lg) {
+            Image(systemName: "display.2")
+                .font(.system(size: 42, weight: .medium))
+                .foregroundStyle(PulseTheme.accent)
+
+            VStack(spacing: PulseSpacing.xs) {
+                Text("Color scan complete")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(PulseTheme.textPrimary)
+
+                Text("Did you notice any dead, bright, or stuck pixels?")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(PulseTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.bottom, 8)
-            
-            VStack(spacing: 12) {
-                Button(action: {
-                    test.confirmNoDeadPixels()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                        
-                        Text("No Issues Found")
-                            .font(.system(size: 18, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.green, Color.green.opacity(0.8)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(16)
-                }
-                
-                Button(action: {
-                    test.confirmDeadPixelsFound()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 16, weight: .semibold))
-                        
-                        Text("Issues Detected")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(16)
-                }
+
+            VStack(spacing: PulseSpacing.sm) {
+                PulseTestActionButton(
+                    title: "No issues found",
+                    icon: "checkmark.circle.fill",
+                    role: .primary,
+                    action: test.confirmNoDeadPixels
+                )
+
+                PulseTestActionButton(
+                    title: "Report display issue",
+                    icon: "xmark.circle",
+                    role: .destructive,
+                    action: test.confirmDeadPixelsFound
+                )
             }
         }
-        .padding(30)
+        .padding(PulseSpacing.xl)
+        .frame(maxWidth: 360)
         .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Material.regular)
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(PulseTheme.surface)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(PulseTheme.divider, lineWidth: 1)
+                }
         )
-        .padding(.horizontal, 30)
-    }
-}
-
-struct BulletPoint: View {
-    let text: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("•")
-                .font(.system(size: 14, weight: .bold))
-            
-            Text(text)
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-struct NavigationButton: View {
-    let icon: String
-    let text: String
-    let isDisabled: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                if icon == "chevron.left" {
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                
-                Text(text)
-                    .font(.system(size: 16, weight: .semibold))
-                
-                if icon == "chevron.right" {
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
-                }
-            }
-            .foregroundColor(isDisabled ? .secondary : .primary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(isDisabled ? Color(.systemGray5) : Color(.systemGray6))
-            .cornerRadius(14)
-        }
-        .disabled(isDisabled)
+        .padding(PulseSpacing.lg)
     }
 }

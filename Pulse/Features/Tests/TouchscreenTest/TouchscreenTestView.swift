@@ -1,141 +1,127 @@
 import SwiftUI
-import Combine
 
 struct TouchscreenTestView: View {
     @ObservedObject var test: TouchscreenTest
-    @Environment(\.dismiss) var dismiss
-    let columns = 3
-    let rows = 3
-    
-    var progress: Double {
+    @Environment(\.dismiss) private var dismiss
+
+    private let columns = 3
+    private let rows = 3
+
+    private var progress: Double {
         Double(test.touchedCells.count) / Double(columns * rows)
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background
-                Color(.systemBackground)
+                PulseTheme.background
                     .ignoresSafeArea()
-                
-                // Grid
+
                 VStack(spacing: 0) {
                     ForEach(0..<rows, id: \.self) { row in
                         HStack(spacing: 0) {
-                            ForEach(0..<columns, id: \.self) { col in
-                                let cellId = row * columns + col
-                                let isTouched = test.touchedCells.contains(cellId)
-                                
+                            ForEach(0..<columns, id: \.self) { column in
+                                let cellID = row * columns + column
+                                let isTouched = test.touchedCells.contains(cellID)
+
                                 ZStack {
                                     Rectangle()
-                                        .fill(isTouched ? Color.green.opacity(0.2) : Color(.systemGray6))
-                                    
+                                        .fill(isTouched ? PulseTheme.success.opacity(0.18) : PulseTheme.surface)
+
                                     if isTouched {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 60))
-                                            .foregroundColor(.green)
+                                            .font(.system(size: 48, weight: .semibold))
+                                            .foregroundStyle(PulseTheme.success)
                                     } else {
-                                        Text("\(cellId + 1)")
-                                            .font(.system(size: 24, weight: .medium))
-                                            .foregroundColor(.secondary)
+                                        Text("\(cellID + 1)")
+                                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                                            .foregroundStyle(PulseTheme.textSecondary)
                                     }
-                                    
-                                    // Border
+
                                     Rectangle()
-                                        .strokeBorder(Color(.systemGray4), lineWidth: 1)
+                                        .strokeBorder(PulseTheme.divider, lineWidth: 1)
                                 }
                             }
                         }
                     }
                 }
                 .ignoresSafeArea()
-                
-                // Touch ripple indicators
-                ForEach(Array(test.touchPoints.enumerated()), id: \.offset) { index, point in
+
+                ForEach(Array(test.touchPoints.enumerated()), id: \.offset) { _, point in
                     Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.green.opacity(0.4), .green.opacity(0.2), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 40
-                            )
-                        )
-                        .frame(width: 80, height: 80)
+                        .fill(PulseTheme.accent.opacity(0.45))
+                        .frame(width: 64, height: 64)
+                        .overlay(Circle().stroke(PulseTheme.accent, lineWidth: 2))
                         .position(point)
                         .allowsHitTesting(false)
                 }
-                
-                // Top bar with progress
-                VStack(spacing: 0) {
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.primary)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Material.ultraThin))
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(spacing: 4) {
-                            Text("\(test.touchedCells.count)/\(columns * rows)")
-                                .font(.system(size: 18, weight: .bold))
-                                .monospacedDigit()
-                            
-                            ProgressView(value: progress)
-                                .tint(.green)
-                                .frame(width: 100)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Capsule().fill(Material.ultraThin))
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            test.markSkipped(reason: "User skipped test")
-                        }) {
-                            Text("Skip")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.orange)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                                .background(Capsule().fill(Material.ultraThin))
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 60)
-                    .padding(.bottom, 20)
-                    
-                    Spacer()
-                }
+
+                LinearGradient(
+                    colors: [Color.black.opacity(0.6), .clear, Color.black.opacity(0.86)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
             }
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        test.registerTouch(
-                            at: value.location,
-                            in: geometry.size,
-                            columns: columns,
-                            rows: rows
-                        )
+                        test.registerTouch(at: value.location, in: geometry.size, columns: columns, rows: rows)
                     }
             )
+            // Reserve the system top and bottom regions for the HUD. This keeps
+            // the custom header out from underneath the status bar and keeps
+            // the instruction panel above the tab bar on every device size.
+            .safeAreaInset(edge: .top, spacing: 0) {
+                PulseTestHeader(
+                    title: "Touchscreen",
+                    status: test.status,
+                    onClose: { dismiss() },
+                    onSkip: { test.markSkipped(reason: "User skipped test") }
+                )
+                .padding(.top, PulseSpacing.xs)
+                .padding(.bottom, PulseSpacing.sm)
+                .background(PulseTheme.background.opacity(0.82))
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                PulseTestPanel {
+                    VStack(spacing: PulseSpacing.sm) {
+                        HStack {
+                            Text("Touch every area")
+                                .font(.headline)
+                                .foregroundStyle(PulseTheme.textPrimary)
+                            Spacer()
+                            Text("\(test.touchedCells.count)/9")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(test.touchedCells.count == 9 ? PulseTheme.success : PulseTheme.accent)
+                        }
+
+                        ProgressView(value: progress)
+                            .tint(PulseTheme.accent)
+
+                        Text("Tap each grid cell to verify touch registration.")
+                            .font(.caption)
+                            .foregroundStyle(PulseTheme.textSecondary)
+                    }
+                    .allowsHitTesting(false)
+                }
+                .padding(.bottom, PulseSpacing.sm)
+            }
         }
-        .ignoresSafeArea()
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .pulseTestSceneStyle()
+        // Keep the system status area visible and let the safe-area inset above
+        // place the custom header beneath it.
         .statusBar(hidden: false)
         .onAppear {
             test.reset()
-            Task {
-                try? await test.run()
-            }
+            Task { try? await test.run() }
         }
-        .onChange(of: test.status) {
-            if test.status == .passed || test.status == .failed || test.status == .skipped {
+        .onChange(of: test.status) { _, status in
+            if status == .passed || status == .failed || status == .skipped {
                 dismiss()
             }
         }

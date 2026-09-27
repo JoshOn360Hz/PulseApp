@@ -1,47 +1,35 @@
 import SwiftUI
 
-// Supporting Views for Reports
-
-struct ResultStat: View {
-    let label: String
-    let count: Int
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 6) {
-            Text("\(count)")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(color)
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct DeviceInfoRow: View {
-    let icon: String
+struct ReportFact: View {
     let label: String
     let value: String
-    
+    let icon: String
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: PulseSpacing.sm) {
             Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(.blue)
-                .frame(width: 24)
-            
-            Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .frame(width: 80, alignment: .leading)
-            
-            Text(value)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.primary)
-            
-            Spacer()
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(PulseTheme.accent)
+                .frame(width: 24, height: 24)
+                .background(PulseTheme.accent.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label.uppercased())
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(0.7)
+                    .foregroundStyle(PulseTheme.textSecondary)
+
+                Text(value)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(PulseTheme.textPrimary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 
@@ -49,98 +37,108 @@ struct CategoryResultsCard: View {
     let category: TestCategory
     let results: [TestResult]
     let engine: DiagnosticEngine
-    
-    var passCount: Int {
+
+    private var passedCount: Int {
         results.filter { $0.status == .passed }.count
     }
-    
-    var failCount: Int {
+
+    private var failedCount: Int {
         results.filter { $0.status == .failed }.count
     }
-    
-    var icon: String {
-        switch category {
-        case .inputInteraction: return "hand.tap"
-        case .display: return "display"
-        case .cameraMedia: return "camera"
-        case .sensors: return "sensor"
-        case .biometrics: return "faceid"
-        case .systemConnectivity: return "cpu"
+
+    var body: some View {
+        PulseCard {
+            VStack(alignment: .leading, spacing: PulseSpacing.md) {
+                HStack(spacing: PulseSpacing.sm) {
+                    Image(systemName: category.pulseIcon)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(PulseTheme.accent)
+                        .frame(width: 30, height: 30)
+                        .background(PulseTheme.accent.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+                    Text(category.rawValue)
+                        .font(.headline)
+                        .foregroundStyle(PulseTheme.textPrimary)
+
+                    Spacer()
+
+                    Text("\(passedCount)/\(results.count)")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(failedCount > 0 ? PulseTheme.failure : PulseTheme.success)
+                }
+
+                Divider().overlay(PulseTheme.divider)
+
+                VStack(spacing: PulseSpacing.sm) {
+                    ForEach(results) { result in
+                        if let test = engine.tests.first(where: { $0.id == result.testId }) {
+                            resultRow(test: test, result: result)
+                        }
+                    }
+                }
+            }
         }
     }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(.blue)
-                
-                Text(category.rawValue)
-                    .font(.system(size: 16, weight: .semibold))
-                
+
+    private func resultRow(test: any DiagnosticTest, result: TestResult) -> some View {
+        VStack(alignment: .leading, spacing: PulseSpacing.xs) {
+            HStack(spacing: PulseSpacing.sm) {
+                Image(systemName: statusIcon(for: result.status))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(statusColor(for: result.status))
+                    .frame(width: 22)
+
+                Text(test.title)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(PulseTheme.textPrimary)
+
                 Spacer()
-                
-                HStack(spacing: 12) {
-                    if passCount > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 12))
-                            Text("\(passCount)")
-                                .font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundColor(.green)
-                    }
-                    
-                    if failCount > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 12))
-                            Text("\(failCount)")
-                                .font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundColor(.red)
-                    }
-                }
+
+                Text(result.status.rawValue)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(statusColor(for: result.status))
             }
-            
-            Divider()
-            
-            VStack(spacing: 8) {
-                ForEach(results) { result in
-                    if let test = engine.tests.first(where: { $0.id == result.testId }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: result.status == .passed ? "checkmark.circle.fill" :
-                                               result.status == .failed ? "xmark.circle.fill" :
-                                               "minus.circle.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(result.status == .passed ? .green :
-                                               result.status == .failed ? .red : .orange)
-                            
-                            Text(test.title)
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                        }
-                    }
-                }
+
+            if let failureReason = result.failureReason {
+                Text(failureReason)
+                    .font(.caption)
+                    .foregroundStyle(PulseTheme.textSecondary)
+                    .padding(.leading, 30)
             }
         }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
-        .padding(.horizontal, 20)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(test.title), \(result.status.rawValue)\(result.failureReason.map { ", \($0)" } ?? "")")
+    }
+
+    private func statusColor(for status: TestStatus) -> Color {
+        switch status {
+        case .passed: return PulseTheme.success
+        case .failed: return PulseTheme.failure
+        case .skipped: return PulseTheme.warning
+        case .running: return PulseTheme.accent
+        case .notStarted: return PulseTheme.unsupported
+        }
+    }
+
+    private func statusIcon(for status: TestStatus) -> String {
+        switch status {
+        case .passed: return "checkmark.circle.fill"
+        case .failed: return "exclamationmark.circle.fill"
+        case .skipped: return "minus.circle.fill"
+        case .running: return "dot.radiowaves.left.and.right"
+        case .notStarted: return "circle.dashed"
+        }
     }
 }
 
 struct ActivityViewController: UIViewControllerRepresentable {
     let activityItems: [Any]
-    
+
     func makeUIViewController(context: Context) -> UIActivityViewController {
         UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
     }
-    
+
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

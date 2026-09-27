@@ -2,205 +2,64 @@ import SwiftUI
 
 struct MicrophoneTestView: View {
     @ObservedObject var test: MicrophoneTest
-    @Environment(\.dismiss) var dismiss
-    
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.1),
-                    Color.cyan.opacity(0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Instruction card
-                    VStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.red.opacity(0.2), Color.orange.opacity(0.2)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 120, height: 120)
-                            
-                            Image(systemName: test.audioLevel > 0.1 ? "mic.fill" : "mic")
-                                .font(.system(size: 60))
-                                .foregroundColor(test.audioLevel > 0.1 ? .red : .gray)
-                                .symbolEffect(.pulse, isActive: test.audioLevel > 0.3)
-                        }
-                        
-                        Text("Microphone Test")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Text("Speak or make sounds into the microphone")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+        PulseTestScrollScreen(
+            title: "Microphone",
+            status: test.status,
+            onClose: { dismiss() },
+            onSkip: { test.markSkipped(reason: "User skipped test") }
+        ) {
+            PulseTestHero(icon: test.audioLevel > 0.1 ? "mic.fill" : "mic", tint: test.audioLevel > 0.1 ? PulseTheme.success : PulseTheme.accent, isActive: test.audioLevel > 0.3)
+
+            PulseTestPanel {
+                VStack(alignment: .leading, spacing: PulseSpacing.md) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Live input level")
+                            .font(.headline)
+                            .foregroundStyle(PulseTheme.textPrimary)
+                        Spacer()
+                        Text(String(format: "%.0f%%", test.audioLevel * 100))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(test.audioLevel > 0.1 ? PulseTheme.success : PulseTheme.accent)
                     }
-                    .padding(.top, 30)
-                    
-                    // Audio level visualization
-                    VStack(spacing: 20) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "waveform")
-                                .foregroundColor(.red)
-                            Text("Audio Level")
-                                .font(.headline)
-                            Spacer()
-                        }
-                        
-                        // Visual level meter
+
+                    GeometryReader { proxy in
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemGray6))
-                                .frame(height: 60)
-                            
-                            GeometryReader { geometry in
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                test.audioLevel < 0.3 ? Color.green :
-                                                test.audioLevel < 0.7 ? Color.orange : Color.red,
-                                                (test.audioLevel < 0.3 ? Color.green :
-                                                test.audioLevel < 0.7 ? Color.orange : Color.red).opacity(0.7)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(width: geometry.size.width * CGFloat(test.audioLevel))
-                                    .animation(.spring(response: 0.2), value: test.audioLevel)
-                            }
-                            .frame(height: 60)
-                        }
-                        
-                        HStack {
-                            Text("Level:")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text("\(Int(test.audioLevel * 100))%")
-                                .font(.system(size: 32, weight: .bold))
-                                .monospacedDigit()
-                                .foregroundColor(test.audioLevel > 0.1 ? .red : .secondary)
-                            Spacer()
-                        }
-                        
-                        if test.isRecording {
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 8, height: 8)
-                                Text("Recording...")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                            Capsule().fill(PulseTheme.surfaceRaised)
+                            Capsule()
+                                .fill(LinearGradient(colors: [PulseTheme.accent, PulseTheme.success], startPoint: .leading, endPoint: .trailing))
+                                .frame(width: proxy.size.width * CGFloat(min(max(test.audioLevel, 0), 1)))
                         }
                     }
-                    .padding(20)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(20)
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                    .padding(.horizontal, 20)
-                    
-                    // Info card
-                    HStack(spacing: 12) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                        Text("The bar should move when you speak")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(12)
-                    .padding(.horizontal, 20)
-                    
-                    // Action buttons
-                    if test.isRecording && test.status == .running {
-                        VStack(spacing: 12) {
-                            Button(action: {
-                                test.confirmSuccess()
-                            }) {
-                                HStack {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 18, weight: .semibold))
-                                    Text("Microphone Works")
-                                        .font(.system(size: 18, weight: .semibold))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 18)
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.green, Color.green.opacity(0.8)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(16)
-                            }
-                            
-                            Button(action: {
-                                test.markFailed(reason: "User reported failure")
-                            }) {
-                                HStack {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text("Microphone Doesn't Work")
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                                .foregroundColor(.red)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.red.opacity(0.1))
-                                .cornerRadius(16)
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 30)
-                    }
+                    .frame(height: 14)
+
+                    Text("Speak or tap near the microphone. The level should respond in real time.")
+                        .font(.subheadline)
+                        .foregroundStyle(PulseTheme.textSecondary)
                 }
             }
-        }
-        .navigationTitle(test.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    test.markSkipped(reason: "User skipped test")
-                }) {
-                    Text("Skip")
-                        .foregroundColor(.orange)
-                        .fontWeight(.medium)
+
+            if test.isRecording && test.status == .running {
+                VStack(spacing: PulseSpacing.sm) {
+                    PulseTestActionButton(title: "Microphone works", icon: "checkmark.circle.fill", role: .primary, action: test.confirmSuccess)
+                    PulseTestActionButton(title: "Report a microphone issue", icon: "xmark.circle", role: .destructive, action: { test.markFailed(reason: "User reported failure") })
                 }
+                .padding(.horizontal, PulseSpacing.sm)
             }
         }
         .onAppear {
             test.reset()
-            Task {
-                try? await test.run()
-            }
+            Task { try? await test.run() }
         }
         .onDisappear {
             test.stopRecording()
         }
-        .onChange(of: test.status) {
-            if test.status == .passed || test.status == .failed || test.status == .skipped {
+        .onChange(of: test.status) { _, status in
+            if status == .passed || status == .failed || status == .skipped {
                 dismiss()
             }
         }
     }
 }
-

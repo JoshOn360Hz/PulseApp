@@ -15,27 +15,22 @@ class DiagnosticEngine: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    private init() {
-        loadTests()
-    }
-    
-    private func loadTests() {
-        tests = [
-            // dynamically load 
-        ]
+    init(tests: [any DiagnosticTest] = []) {
+        self.tests = tests
     }
     
     func addTest(_ test: any DiagnosticTest) {
+        guard !tests.contains(where: { $0.id == test.id }) else { return }
         tests.append(test)
         
-        // Subscribe to test changes to trigger engine updates
-        if let observableTest = test as? (any ObservableObject) {
-            let testPublisher = (observableTest.objectWillChange as any Publisher) as! ObservableObjectPublisher
-            testPublisher.sink { [weak self] _ in
-                Task { @MainActor in
+        // All production diagnostics inherit from BaseDiagnosticTest. Observe the
+        // concrete publisher so SwiftUI refreshes list rows when hardware state changes.
+        if let observableTest = test as? BaseDiagnosticTest {
+            observableTest.objectWillChange
+                .sink { [weak self] _ in
                     self?.objectWillChange.send()
                 }
-            }.store(in: &cancellables)
+                .store(in: &cancellables)
         }
     }
     
@@ -48,6 +43,12 @@ class DiagnosticEngine: ObservableObject {
         currentTest = test
         test.status = .running
         
+        defer {
+            if currentTest?.id == test.id {
+                currentTest = nil
+            }
+        }
+
         do {
             try await test.run()
         } catch {
@@ -61,7 +62,7 @@ class DiagnosticEngine: ObservableObject {
         // Reset all tests to start from scratch
         resetAllTests()
         
-        for test in tests where test.isSupported {
+        for test in tests {
             await runTest(test)
         }
         

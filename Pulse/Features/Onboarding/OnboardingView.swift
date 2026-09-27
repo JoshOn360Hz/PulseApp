@@ -3,213 +3,203 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
-    
+
     var body: some View {
         ZStack {
-            
+            PulseTheme.background.ignoresSafeArea()
+
             TabView(selection: $currentPage) {
-                // Welcome Page
-                WelcomePage()
-                    .tag(0)
-                
-                // How to Use Page
-                HowToUsePage()
-                    .tag(1)
-                
-                // Permissions Page
-                PermissionsPage(isPresented: $isPresented)
-                    .tag(2)
+                WelcomePage().tag(0)
+                HowToUsePage().tag(1)
+                PermissionsPage(isPresented: $isPresented).tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+private struct OnboardingPage<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack {
+            PulseTheme.background.ignoresSafeArea()
+            content
         }
     }
 }
 
 struct WelcomePage: View {
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            // App Icon
-            Image("icon-onboarding")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 150, height: 150)
-                .clipShape(RoundedRectangle(cornerRadius: 30))
-                .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 10)
-            
-            VStack(spacing: 16) {
-                Text("Welcome to Pulse")
-                    .font(.system(size: 42, weight: .bold))
-                    .foregroundColor(.primary)
-                
-                Text("Complete Device Diagnostics")
-                    .font(.title3)
-                    .foregroundColor(.primary.opacity(0.9))
+        OnboardingPage {
+            VStack(alignment: .leading, spacing: PulseSpacing.xl) {
+                Spacer()
+
+                Image("icon-onboarding")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 104, height: 104)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+
+                VStack(alignment: .leading, spacing: PulseSpacing.sm) {
+                    Text("Know your device.")
+                        .font(.system(size: 42, weight: .bold, design: .rounded))
+                        .foregroundStyle(PulseTheme.textPrimary)
+
+                    Text("Pulse puts a complete hardware check in your hands.")
+                        .font(.title3)
+                        .foregroundStyle(PulseTheme.textSecondary)
+                }
+
+                PulseCard {
+                    VStack(spacing: PulseSpacing.md) {
+                        FeatureRow(icon: "testtube.2", text: "Run guided checks across your hardware")
+                        Divider().overlay(PulseTheme.divider)
+                        FeatureRow(icon: "chart.bar.doc.horizontal", text: "Understand what passed and what needs attention")
+                        Divider().overlay(PulseTheme.divider)
+                        FeatureRow(icon: "lock.shield", text: "Keep diagnostics local to your device")
+                    }
+                }
+
+                Spacer()
+                onboardingHint("Swipe to see how it works")
             }
-            
-            VStack(spacing: 12) {
-                FeatureRow(icon: "testtube.2", text: "Test all hardware components")
-                FeatureRow(icon: "chart.bar.doc.horizontal", text: "Get detailed diagnostic reports")
-                FeatureRow(icon: "square.and.arrow.up", text: "Export results as PDF or JSON")
-            }
-            .padding(.horizontal, 40)
-            .padding(.top, 20)
-            
-            Spacer()
-            
-            Text("Swipe to continue")
-                .font(.subheadline)
-                .foregroundColor(.primary.opacity(0.7))
-                .padding(.bottom, 50)
+            .padding(.horizontal, PulseSpacing.xl)
+            .padding(.vertical, PulseSpacing.xxl)
         }
     }
 }
 
 struct HowToUsePage: View {
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Image(systemName: "hand.tap.fill")
-                    .font(.system(size: 70))
-                    .foregroundColor(.primary)
-                    .padding(.bottom, 10)
-                
-                Text("How to Use Pulse")
-                    .font(.system(size: 38, weight: .bold))
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
+        OnboardingPage {
+            VStack(alignment: .leading, spacing: PulseSpacing.xl) {
+                Spacer()
+
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundStyle(PulseTheme.accent)
+                    .frame(width: 92, height: 92)
+                    .background(PulseTheme.accent.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+
+                VStack(alignment: .leading, spacing: PulseSpacing.sm) {
+                    Text("A clear path to a healthy device.")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(PulseTheme.textPrimary)
+
+                    Text("Each diagnostic explains what to do, shows live feedback, and records a result.")
+                        .font(.body)
+                        .foregroundStyle(PulseTheme.textSecondary)
+                }
+
+                VStack(spacing: PulseSpacing.md) {
+                    InstructionStep(number: "01", title: "Choose a check", description: "Browse by hardware area or start the full sweep.")
+                    InstructionStep(number: "02", title: "Follow the signal", description: "Use the live surface to test touch, sensors, audio, camera, and more.")
+                    InstructionStep(number: "03", title: "Review the result", description: "See a concise report you can keep or share with support.")
+                }
+
+                Spacer()
+                onboardingHint("Swipe to continue")
             }
-            
-            VStack(spacing: 24) {
-                InstructionStep(
-                    number: "1",
-                    title: "Browse Tests",
-                    description: "Select from categories like Input, Display, Camera, Sensors, and more"
-                )
-                
-                InstructionStep(
-                    number: "2",
-                    title: "Run Diagnostics",
-                    description: "Follow on-screen instructions for each test or use 'Run All' for automatic testing"
-                )
-                
-                InstructionStep(
-                    number: "3",
-                    title: "Review Results",
-                    description: "Check the Results tab for detailed reports and export your findings"
-                )
-            }
-            .padding(.horizontal, 30)
-            
-            Spacer()
-            
-            Text("Swipe to continue")
-                .font(.subheadline)
-                .foregroundColor(.primary.opacity(0.7))
-                .padding(.bottom, 50)
+            .padding(.horizontal, PulseSpacing.xl)
+            .padding(.vertical, PulseSpacing.xxl)
         }
     }
 }
 
 struct PermissionsPage: View {
     @Binding var isPresented: Bool
-    
+
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            VStack(spacing: 16) {
+        OnboardingPage {
+            VStack(alignment: .leading, spacing: PulseSpacing.xl) {
+                Spacer()
+
                 Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 70))
-                    .foregroundColor(.primary)
-                    .padding(.bottom, 10)
-                
-                Text("Permissions Required")
-                    .font(.system(size: 38, weight: .bold))
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-            }
-            
-            VStack(spacing: 20) {
-                PermissionRow(
-                    icon: "camera.fill",
-                    title: "Camera",
-                    description: "Test front and rear cameras with flash"
-                )
-                
-                PermissionRow(
-                    icon: "mic.fill",
-                    title: "Microphone",
-                    description: "Test audio recording capabilities"
-                )
-                
-                PermissionRow(
-                    icon: "location.fill",
-                    title: "Motion & Sensors",
-                    description: "Test accelerometer, gyroscope, and other sensors"
-                )
-                
-                PermissionRow(
-                    icon: "faceid",
-                    title: "Biometrics",
-                    description: "Test Face ID or Touch ID functionality"
-                )
-            }
-            .padding(.horizontal, 30)
-            
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    completeOnboarding()
-                }) {
-                    HStack {
-                        Text("Get Started")
-                            .font(.headline)
-                        Image(systemName: "arrow.right")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundStyle(PulseTheme.success)
+                    .frame(width: 92, height: 92)
+                    .background(PulseTheme.success.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+
+                VStack(alignment: .leading, spacing: PulseSpacing.sm) {
+                    Text("Permission, when it matters.")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(PulseTheme.textPrimary)
+
+                    Text("Pulse asks only when a diagnostic needs access, with no account or cloud upload required.")
+                        .font(.body)
+                        .foregroundStyle(PulseTheme.textSecondary)
                 }
-                .buttonStyle(.borderedProminent)
-                
-                Text("Permissions will be requested as needed during tests")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+
+                VStack(spacing: PulseSpacing.sm) {
+                    PermissionRow(icon: "camera.fill", title: "Camera", description: "Front, rear, and flash checks")
+                    PermissionRow(icon: "mic.fill", title: "Microphone", description: "Audio input and recording checks")
+                    PermissionRow(icon: "location.fill", title: "Sensors & location", description: "Motion, GPS, and environmental checks")
+                    PermissionRow(icon: "faceid", title: "Biometrics", description: "Face ID or Touch ID response")
+                }
+
+                Spacer()
+
+                VStack(spacing: PulseSpacing.sm) {
+                    Button(action: completeOnboarding) {
+                        PulseButtonLabel(title: "Start diagnostics", icon: "arrow.right")
+                    }
+                    .buttonStyle(PulsePrimaryButtonStyle())
+                    .accessibilityIdentifier("startDiagnosticsButton")
+
+                    Text("You can change permissions later in Settings.")
+                        .font(.caption)
+                        .foregroundStyle(PulseTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
             }
-            .padding(.horizontal, 30)
-            .padding(.bottom, 50)
+            .padding(.horizontal, PulseSpacing.xl)
+            .padding(.vertical, PulseSpacing.xxl)
         }
     }
-    
+
     private func completeOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         isPresented = false
     }
 }
 
-// Supporting Views
+private func onboardingHint(_ text: String) -> some View {
+    HStack(spacing: PulseSpacing.xs) {
+        Image(systemName: "hand.draw")
+        Text(text)
+    }
+    .font(.caption.weight(.semibold))
+    .foregroundStyle(PulseTheme.textSecondary)
+    .frame(maxWidth: .infinity, alignment: .center)
+}
 
 struct FeatureRow: View {
     let icon: String
     let text: String
-    
+
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: PulseSpacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(.accentColor)
-                .frame(width: 40)
-            
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(PulseTheme.accent)
+                .frame(width: 32, height: 32)
+                .background(PulseTheme.accent.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+
             Text(text)
-                .font(.body)
-                .foregroundColor(.primary)
-            
+                .font(.subheadline)
+                .foregroundStyle(PulseTheme.textPrimary)
+
             Spacer()
         }
     }
@@ -219,30 +209,25 @@ struct InstructionStep: View {
     let number: String
     let title: String
     let description: String
-    
+
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.2))
-                    .frame(width: 40, height: 40)
-                
-                Text(number)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.accentColor)
-            }
-            
-            VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .top, spacing: PulseSpacing.md) {
+            Text(number)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(PulseTheme.background)
+                .frame(width: 34, height: 34)
+                .background(PulseTheme.accent)
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: PulseSpacing.xs) {
                 Text(title)
                     .font(.headline)
-                    .foregroundColor(.primary)
-                
+                    .foregroundStyle(PulseTheme.textPrimary)
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(PulseTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            
             Spacer()
         }
     }
@@ -252,34 +237,32 @@ struct PermissionRow: View {
     let icon: String
     let title: String
     let description: String
-    
+
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.2))
-                    .frame(width: 50, height: 50)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 22))
-                    .foregroundColor(.accentColor)
-            }
-            
-            VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .top, spacing: PulseSpacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(PulseTheme.warning)
+                .frame(width: 32, height: 32)
+                .background(PulseTheme.warning.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(PulseTheme.textPrimary)
                 Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.caption)
+                    .foregroundStyle(PulseTheme.textSecondary)
             }
-            
             Spacer()
         }
-        .padding(16)
-        .background(Color.accentColor.opacity(0.1))
-        .cornerRadius(16)
+        .padding(PulseSpacing.md)
+        .background(PulseTheme.surface)
+        .overlay {
+            RoundedRectangle(cornerRadius: PulseRadius.control, style: .continuous)
+                .stroke(PulseTheme.divider, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: PulseRadius.control, style: .continuous))
     }
 }

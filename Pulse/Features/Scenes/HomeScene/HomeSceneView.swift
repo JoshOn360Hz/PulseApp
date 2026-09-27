@@ -1,23 +1,27 @@
 import SwiftUI
 
 struct HomeSceneView: View {
-    @ObservedObject private var engine = DiagnosticEngine.shared
+    @StateObject private var engine = DiagnosticEngine.shared
     @State private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
             TestsTabView(engine: engine)
                 .tabItem {
-                    Label("Tests", systemImage: "testtube.2")
+                    Label("Pulse", systemImage: "testtube.2")
                 }
+                .accessibilityIdentifier("testsTab")
                 .tag(0)
             
             ResultsTabView(engine: engine)
                 .tabItem {
                     Label("Results", systemImage: "chart.bar.doc.horizontal")
                 }
+                .accessibilityIdentifier("resultsTab")
                 .tag(1)
         }
+        .tint(PulseTheme.accent)
+        .preferredColorScheme(.dark)
         .onAppear {
             setupTests()
         }
@@ -48,5 +52,3 @@ struct HomeSceneView: View {
         }
     }
 }
-
-

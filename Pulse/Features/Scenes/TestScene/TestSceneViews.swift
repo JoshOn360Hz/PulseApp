@@ -238,7 +238,7 @@ struct TestDetailView: View {
                         }
                     }
             } else if let cameraTest = test as? CameraTest {
-                CameraTestView(test: cameraTest)
+                CameraTestView(test: cameraTest, isAutoRunning: isAutoRunning, isPaused: $isPaused)
                     .navigationBarBackButtonHidden(isAutoRunning)
                     .toolbar {
                         if isAutoRunning {
@@ -535,6 +535,14 @@ struct TestDetailView: View {
                 Text("Test view not implemented")
             }
         }
+        .pulseTestSceneStyle()
+        .toolbar(.hidden, for: .tabBar)
+        .statusBar(hidden: true)
+        .environment(\.pulseIsAutoRunning, isAutoRunning)
+        .environment(\.pulsePauseTestRun, {
+            isPaused = true
+            dismiss()
+        })
     }
 }
 
@@ -561,7 +569,7 @@ struct AutoRunTestsView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            PulseTheme.background
                 .ignoresSafeArea()
             
             VStack(spacing: 30) {
@@ -571,14 +579,14 @@ struct AutoRunTestsView: View {
                         // Circular progress
                         ZStack {
                             Circle()
-                                    .stroke(Color(.systemGray5), lineWidth: 8)
+                                    .stroke(PulseTheme.surfaceRaised, lineWidth: 8)
                                 .frame(width: 120, height: 120)
                             
                             Circle()
                                 .trim(from: 0, to: progress)
                                 .stroke(
                                     LinearGradient(
-                                        colors: [.blue, .blue.opacity(0.7)],
+                                        colors: [PulseTheme.accent, PulseTheme.accentDeep],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
@@ -592,7 +600,7 @@ struct AutoRunTestsView: View {
                                     .font(.system(size: 28, weight: .bold))
                                 Text("\(currentTestIndex + 1)/\(engine.tests.count)")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(PulseTheme.textSecondary)
                             }
                         }
                         
@@ -607,7 +615,7 @@ struct AutoRunTestsView: View {
                         HStack {
                             Image(systemName: "testtube.2")
                                 .font(.title3)
-                                .foregroundColor(.blue)
+                            .foregroundStyle(PulseTheme.accent)
                             
                             Text("Current Test")
                                 .font(.headline)
@@ -619,12 +627,12 @@ struct AutoRunTestsView: View {
                         HStack(spacing: 16) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.15))
+                                .fill(PulseTheme.accent.opacity(0.13))
                                     .frame(width: 50, height: 50)
                                 
                                 Image(systemName: "arrow.clockwise.circle.fill")
                                     .font(.system(size: 22))
-                                    .foregroundColor(.blue)
+                                    .foregroundStyle(PulseTheme.accent)
                             }
                             
                             VStack(alignment: .leading, spacing: 6) {
@@ -633,7 +641,7 @@ struct AutoRunTestsView: View {
                                 
                                 Text(test.description)
                                     .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(PulseTheme.textSecondary)
                                     .lineLimit(2)
                             }
                             
@@ -641,9 +649,8 @@ struct AutoRunTestsView: View {
                         }
                     }
                     .padding(20)
-                    .background(Color(.systemBackground))
+                    .background(PulseTheme.surface)
                     .cornerRadius(20)
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                     .padding(.horizontal, 20)
                     
                     // Stats
@@ -675,7 +682,7 @@ struct AutoRunTestsView: View {
                             Circle()
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.green.opacity(0.2), Color.green.opacity(0.1)],
+                                    colors: [PulseTheme.success.opacity(0.2), PulseTheme.success.opacity(0.08)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -684,7 +691,7 @@ struct AutoRunTestsView: View {
                             
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 80))
-                                .foregroundColor(.green)
+                                .foregroundStyle(PulseTheme.success)
                         }
                         
                         VStack(spacing: 12) {
@@ -693,7 +700,7 @@ struct AutoRunTestsView: View {
                             
                             Text("\(completedTests) of \(engine.tests.count) tests finished")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(PulseTheme.textSecondary)
                         }
                         
                         Spacer()
@@ -710,7 +717,7 @@ struct AutoRunTestsView: View {
                             .padding(.vertical, 18)
                             .background(
                                 LinearGradient(
-                                    colors: [Color.green, Color.green.opacity(0.8)],
+                                    colors: [PulseTheme.success, PulseTheme.accent],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -737,47 +744,21 @@ struct AutoRunTestsView: View {
                             Text("Continue")
                                 .font(.system(size: 15, weight: .medium))
                         }
-                        .foregroundColor(.green)
+                        .foregroundStyle(PulseTheme.success)
                     }
                 }
             }
         }
-        .background(
-            NavigationLink(
-                destination: currentTest.map { TestDetailView(test: $0, isAutoRunning: true, isPaused: $isPaused) },
-                isActive: $isNavigatingToTest,
-                label: { EmptyView() }
-            )
-            .hidden()
-        )
+        .navigationDestination(isPresented: $isNavigatingToTest) {
+            if let test = currentTest {
+                TestDetailView(test: test, isAutoRunning: true, isPaused: $isPaused)
+            }
+        }
         .onAppear {
             startNextTest()
         }
-        .onChange(of: currentTest?.status) {
-            // When test completes (passed, failed, or skipped), move to next
-            if let status = currentTest?.status, status != .notStarted && status != .running {
-                isNavigatingToTest = false
-                if !isPaused {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        if !isPaused {
-                            moveToNextTest()
-                        }
-                    }
-                }
-            }
-        }
-        .onChange(of: isPaused) {
-            // When unpausing, check if we should continue to next test
-            if !isPaused {
-                if let status = currentTest?.status, status != .notStarted && status != .running {
-                    // Current test is already complete, move to next
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        if !isPaused {
-                            moveToNextTest()
-                        }
-                    }
-                }
-            }
+        .task(id: "\(currentTestIndex)-\(isPaused)") {
+            await monitorCurrentTest()
         }
     }
     
@@ -788,11 +769,31 @@ struct AutoRunTestsView: View {
     
     private func moveToNextTest() {
         currentTestIndex += 1
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if currentTestIndex < engine.tests.count && !isPaused {
-                startNextTest()
+
+        guard currentTestIndex < engine.tests.count, !isPaused else { return }
+        isNavigatingToTest = true
+    }
+
+    private func monitorCurrentTest() async {
+        guard currentTest != nil else { return }
+
+        while !Task.isCancelled {
+            guard !isPaused else { return }
+
+            if let status = currentTest?.status,
+               status == .passed || status == .failed || status == .skipped {
+                isNavigatingToTest = false
+
+                // Let the detail route finish dismissing before presenting the
+                // next hardware diagnostic.
+                try? await Task.sleep(nanoseconds: 350_000_000)
+
+                guard !Task.isCancelled, !isPaused else { return }
+                moveToNextTest()
+                return
             }
+
+            try? await Task.sleep(nanoseconds: 100_000_000)
         }
     }
 }
@@ -818,8 +819,7 @@ struct StatBox: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
-        .background(Color(.systemBackground))
+        .background(PulseTheme.surface)
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
     }
 }

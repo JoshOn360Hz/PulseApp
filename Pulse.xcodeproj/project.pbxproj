@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D17622D12F0AD4C400D6736C /* DiagnosticModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17622D42F0AD4C400D6736C /* DiagnosticModelTests.swift */; };
+		D17622D22F0AD4C400D6736C /* DiagnosticEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17622D52F0AD4C400D6736C /* DiagnosticEngineTests.swift */; };
+		D17622D32F0AD4C400D6736C /* PulseUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17622D62F0AD4C400D6736C /* PulseUITests.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B15229AD2F0A696600EB8B39 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +33,9 @@
 		B152299F2F0A696500EB8B39 /* Pulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B15229AC2F0A696600EB8B39 /* PulseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B15229B62F0A696600EB8B39 /* PulseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PulseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D17622D42F0AD4C400D6736C /* DiagnosticModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticModelTests.swift; sourceTree = "<group>"; };
+		D17622D52F0AD4C400D6736C /* DiagnosticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEngineTests.swift; sourceTree = "<group>"; };
+		D17622D62F0AD4C400D6736C /* PulseUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -79,6 +88,8 @@
 			isa = PBXGroup;
 			children = (
 				B15229A12F0A696500EB8B39 /* Pulse */,
+				D17622D72F0AD4C400D6736C /* PulseTests */,
+				D17622D82F0AD4C400D6736C /* PulseUITests */,
 				B15229A02F0A696500EB8B39 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -91,6 +102,23 @@
 				B15229B62F0A696600EB8B39 /* PulseUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D17622D72F0AD4C400D6736C /* PulseTests */ = {
+			isa = PBXGroup;
+			children = (
+				D17622D42F0AD4C400D6736C /* DiagnosticModelTests.swift */,
+				D17622D52F0AD4C400D6736C /* DiagnosticEngineTests.swift */,
+			);
+			path = PulseTests;
+			sourceTree = "<group>";
+		};
+		D17622D82F0AD4C400D6736C /* PulseUITests */ = {
+			isa = PBXGroup;
+			children = (
+				D17622D62F0AD4C400D6736C /* PulseUITests.swift */,
+			);
+			path = PulseUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -238,6 +266,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D17622D12F0AD4C400D6736C /* DiagnosticModelTests.swift in Sources */,
+				D17622D22F0AD4C400D6736C /* DiagnosticEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +275,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D17622D32F0AD4C400D6736C /* PulseUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,7 +527,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VCZ6LUVE4J;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.PulseTests;
@@ -522,7 +553,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VCZ6LUVE4J;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.PulseTests;
@@ -547,7 +578,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VCZ6LUVE4J;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.PulseUITests;
@@ -572,7 +603,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VCZ6LUVE4J;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.PulseUITests;
