@@ -149,10 +149,8 @@ struct TestsTabView: View {
                         .accessibilityIdentifier("category_\(category.rawValue)")
                     }
                 }
-                .padding(.leading, PulseSpacing.xs)
-                .padding(.trailing, PulseSpacing.lg)
             }
-            .padding(.horizontal, -PulseSpacing.lg)
+            .clipped()
         }
     }
 
@@ -268,51 +266,59 @@ struct ModernTestCard: View {
 
     var body: some View {
         PulseCard {
-            HStack(spacing: PulseSpacing.md) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(statusColor.opacity(0.13))
-                        .frame(width: 48, height: 48)
-
+            VStack(alignment: .leading, spacing: PulseSpacing.sm) {
+                HStack(spacing: PulseSpacing.md) {
                     Image(systemName: statusIcon)
                         .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(statusColor)
-                }
+                        .frame(width: 48, height: 48)
+                        .background(statusColor.opacity(0.13))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                VStack(alignment: .leading, spacing: PulseSpacing.xs) {
-                    HStack(spacing: PulseSpacing.xs) {
-                        Text(test.title)
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundStyle(PulseTheme.textPrimary)
+                    Text(test.title)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundStyle(PulseTheme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        if !test.isSupported {
-                            Text("Unavailable")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(PulseTheme.warning)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(PulseTheme.warning.opacity(0.12))
-                                .clipShape(Capsule())
-                        }
-                    }
-
-                    Text(test.description)
-                        .font(.subheadline)
-                        .foregroundStyle(PulseTheme.textSecondary)
-                        .lineLimit(2)
-                }
-
-                Spacer(minLength: 0)
-
-                VStack(alignment: .trailing, spacing: PulseSpacing.sm) {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(PulseTheme.textSecondary)
-                    PulseStatusBadge(status: test.status)
+                }
+
+                Text(test.description)
+                    .font(.subheadline)
+                    .foregroundStyle(PulseTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: PulseSpacing.xs) {
+                        badges
+                    }
+                    VStack(alignment: .leading, spacing: PulseSpacing.xs) {
+                        badges
+                    }
                 }
             }
         }
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var badges: some View {
+        PulseStatusBadge(status: test.status)
+            .fixedSize()
+
+        if !test.isSupported {
+            Text("Unavailable")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(PulseTheme.warning)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(PulseTheme.warning.opacity(0.12))
+                .clipShape(Capsule())
+                .fixedSize()
+        }
     }
 
     private var statusColor: Color {

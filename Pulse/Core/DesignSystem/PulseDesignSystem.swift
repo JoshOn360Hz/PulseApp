@@ -223,6 +223,8 @@ struct PulseStatusBadge: View {
     var body: some View {
         Label(status.rawValue, systemImage: icon)
             .font(.system(size: 11, weight: .bold, design: .rounded))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(color)
             .padding(.horizontal, PulseSpacing.sm)
             .padding(.vertical, PulseSpacing.xs)

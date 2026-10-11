@@ -28,10 +28,18 @@ private struct OnboardingPage<Content: View>: View {
     }
 
     var body: some View {
-        ZStack {
-            PulseTheme.background.ignoresSafeArea()
-            content
+        GeometryReader { geometry in
+            ScrollView {
+                content
+                    .frame(maxWidth: 560)
+                    .frame(minHeight: geometry.size.height, alignment: .top)
+                    .frame(maxWidth: .infinity)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         }
+        // Keep scrollable content above the native page indicator.
+        .padding(.bottom, 48)
+        .background(PulseTheme.background)
     }
 }
 
@@ -51,10 +59,12 @@ struct WelcomePage: View {
                     Text("Know your device.")
                         .font(.system(size: 42, weight: .bold, design: .rounded))
                         .foregroundStyle(PulseTheme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text("Pulse puts a complete hardware check in your hands.")
                         .font(.title3)
                         .foregroundStyle(PulseTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 PulseCard {
@@ -93,10 +103,12 @@ struct HowToUsePage: View {
                     Text("A clear path to a healthy device.")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundStyle(PulseTheme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text("Each diagnostic explains what to do, shows live feedback, and records a result.")
                         .font(.body)
                         .foregroundStyle(PulseTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 VStack(spacing: PulseSpacing.md) {
@@ -133,10 +145,12 @@ struct PermissionsPage: View {
                     Text("Permission, when it matters.")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundStyle(PulseTheme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text("Pulse asks only when a diagnostic needs access, with no account or cloud upload required.")
                         .font(.body)
                         .foregroundStyle(PulseTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 VStack(spacing: PulseSpacing.sm) {
@@ -158,6 +172,7 @@ struct PermissionsPage: View {
                     Text("You can change permissions later in Settings.")
                         .font(.caption)
                         .foregroundStyle(PulseTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
@@ -180,6 +195,7 @@ private func onboardingHint(_ text: String) -> some View {
     }
     .font(.caption.weight(.semibold))
     .foregroundStyle(PulseTheme.textSecondary)
+    .fixedSize(horizontal: false, vertical: true)
     .frame(maxWidth: .infinity, alignment: .center)
 }
 
@@ -199,6 +215,7 @@ struct FeatureRow: View {
             Text(text)
                 .font(.subheadline)
                 .foregroundStyle(PulseTheme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
         }
@@ -223,6 +240,7 @@ struct InstructionStep: View {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(PulseTheme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(description)
                     .font(.subheadline)
                     .foregroundStyle(PulseTheme.textSecondary)
@@ -251,9 +269,11 @@ struct PermissionRow: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(PulseTheme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(PulseTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
         }

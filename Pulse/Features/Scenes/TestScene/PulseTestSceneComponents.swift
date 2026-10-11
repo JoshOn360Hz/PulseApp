@@ -9,39 +9,42 @@ struct PulseTestHeader: View {
     @Environment(\.pulsePauseTestRun) private var pauseTestRun
 
     var body: some View {
-        HStack(spacing: PulseSpacing.sm) {
-            Button(action: {
-                if isAutoRunning {
-                    pauseTestRun()
-                } else {
-                    onClose()
+        VStack(alignment: .leading, spacing: PulseSpacing.sm) {
+            HStack(spacing: PulseSpacing.sm) {
+                Button(action: {
+                    if isAutoRunning {
+                        pauseTestRun()
+                    } else {
+                        onClose()
+                    }
+                }) {
+                    Image(systemName: isAutoRunning ? "pause.fill" : "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(PulseTheme.textPrimary)
+                        .frame(width: 42, height: 42)
+                        .background(PulseTheme.surface.opacity(0.92))
+                        .clipShape(Circle())
                 }
-            }) {
-                Image(systemName: isAutoRunning ? "pause.fill" : "xmark")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(PulseTheme.textPrimary)
-                    .frame(width: 42, height: 42)
-                    .background(PulseTheme.surface.opacity(0.92))
-                    .clipShape(Circle())
+    
+                Spacer(minLength: PulseSpacing.sm)
+    
+                PulseStatusBadge(status: status)
+    
+                Button(action: onSkip) {
+                    Text("Skip")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(PulseTheme.warning)
+                        .padding(.horizontal, PulseSpacing.sm)
+                        .padding(.vertical, PulseSpacing.xs)
+                        .background(PulseTheme.warning.opacity(0.14))
+                        .clipShape(Capsule())
+                }
             }
 
             Text(title)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(PulseTheme.textPrimary)
-
-            Spacer(minLength: PulseSpacing.sm)
-
-            PulseStatusBadge(status: status)
-
-            Button(action: onSkip) {
-                Text("Skip")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(PulseTheme.warning)
-                    .padding(.horizontal, PulseSpacing.sm)
-                    .padding(.vertical, PulseSpacing.xs)
-                    .background(PulseTheme.warning.opacity(0.14))
-                    .clipShape(Capsule())
-            }
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, PulseSpacing.lg)
         .padding(.top, PulseSpacing.sm)
